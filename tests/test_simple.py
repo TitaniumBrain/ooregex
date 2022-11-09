@@ -1,4 +1,5 @@
 import pytest
+
 from regex_gen import (
     ASCII,
     DOTALL,
@@ -112,17 +113,22 @@ def test_non_capture_group():
     assert Group(r"spam", capture=False) == r"(?:spam)"
 
 
+def test_named_group_number_reference_exception():
+    with pytest.raises(ValueError):
+        Group(42, name="spam")
+
+
 def test_non_capture_named_exception():
     with pytest.raises(ValueError):
         Group(r"spam", name="spam", capture=False)
 
 
 def test_flag():
-    assert Flags(Flag.IGNORE_CASE) == r"(?i)"
+    assert Flags(IGNORECASE) == r"(?i)"
 
 
 def test_flag_inline():
-    assert Flags(Flag.IGNORE_CASE, r"spam") == r"(?i:spam)"
+    assert Flags(IGNORECASE, r"spam") == r"(?i:spam)"
 
 
 def test_comment():
@@ -152,9 +158,10 @@ def test_conditional():
 
 
 def test_flag_join():
-    assert str(A + I) == r"ai"
-    assert str(A | I) == r"ai"
+    assert A + I == r"ai"
+    assert A | I == r"ai"
+    assert Flag("xiamL") == r"aiLmx"
 
 
 def test_flag_disable():
-    assert str(A - I) == r"a-i"
+    assert A - I == r"a-i"
