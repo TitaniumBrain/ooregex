@@ -78,33 +78,33 @@ class Regex:
         return NotImplemented
 
     def __add__(self, other: str | Regex):
-        return Regex(*self._expressions, other)
+        return Regex(self, other)
 
     def __radd__(self, other: str | Regex):
-        return Regex(other, *self._expressions)
+        return Regex(other, self)
 
-    def __ge__(self, other: str | Regex):
-        if isinstance(other, (str, Regex)):
+    def __ge__(self, other: Regex):
+        if isinstance(other, Regex):
             return self + Positive_LookAhead(other)
         return NotImplemented
 
-    def __gt__(self, other: str | Regex):
-        if isinstance(other, (str, Regex)):
+    def __gt__(self, other: Regex):
+        if isinstance(other, Regex):
             return self + Negative_LookAhead(other)
         return NotImplemented
 
-    def __le__(self, other: str | Regex):
-        if isinstance(other, (str, Regex)):
+    def __le__(self, other: Regex):
+        if isinstance(other, Regex):
             return Positive_LookBehind(self) + other
         return NotImplemented
 
-    def __lt__(self, other: str | Regex):
-        if isinstance(other, (str, Regex)):
+    def __lt__(self, other: Regex):
+        if isinstance(other, Regex):
             return Negative_LookBehind(self) + other
         return NotImplemented
 
     def __hash__(self) -> int:
-        return hash(self._expressions)
+        return hash(str(self))
 
     def __getitem__(self, key: int | slice):
         match key:
@@ -115,17 +115,17 @@ class Regex:
                     "Expression must match a non-negative amount of times."
                 )
 
-            case slice(0 | None, None, None):
+            case slice(start=0 | None, stop=None, step=None):
                 return ZeroOrMore(self)
 
-            case slice(1, None, None):
+            case slice(start=1, stop=None, step=None):
                 return OneOrMore(self)
 
-            case slice(0, 1, None):
+            case slice(start=0, stop=1, step=None):
                 return Optional(self)
 
-            case slice(int(start), int(stop), None):
-                return Repeat(self, (start, stop))
+            case slice(start=int(start_), stop=int(stop_), step=None):
+                return Repeat(self, (start_, stop_))
 
             case _:
                 raise ValueError("Invalid key. Must be an int >= 0 or an int range")
