@@ -109,3 +109,22 @@ def test_complex_1():
     ) | (
         Regex("bac", AnyOf("o0"), "n")
     ) == r"(?P<first>spam|bacon)(spam)?(?(1)eggs|(?P=first))|bac[o0]n"
+
+
+def test_complex_2():
+    pattern = (
+        Group(DIGIT[1:] + (DOT + DIGIT[1:])[0:1])
+        + WHITESPACE[:]
+        + Group(Regex("mililiter") | Regex("ml"), capture=False)
+    )
+    assert pattern == r"(\d+(?:\.\d+)?)\s*(?:mililiter|ml)"
+
+
+def test_complex_3():
+    pattern = (
+        Group("spam", name="spam")[0:1]
+        + (Regex("eggs") >= Regex("bacon"))
+        + WORD[:]
+        + Flags(IGNORECASE | ASCII, If("spam", then="spam", else_="eggs"))
+    )
+    assert pattern == r"(?P<spam>spam)?eggs(?=bacon)\w*(?ai:(?(spam)spam|eggs))"
