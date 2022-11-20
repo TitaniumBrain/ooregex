@@ -33,7 +33,7 @@ class Regex:
         exps = []
         for exp in expressions:
             # if is instance of Regex itself and not of a subclass
-            if isinstance(exp, Regex) and not issubclass(type(exp), Regex):
+            if type(exp) is Regex:
                 exps.extend(exp._expressions)
             else:
                 exps.append(exp)
@@ -44,26 +44,23 @@ class Regex:
         return "".join(str(i) for i in self._expressions)
 
     def __repr__(self) -> str:
-        return " + ".join(repr(i) for i in self._expressions)
+        return " + ".join(
+            (f"Regex({repr(i)})" if isinstance(i, str) else repr(i))
+            for i in self._expressions
+        )
 
     def __eq__(self, other: object) -> bool:
         return str(self) == str(other)
 
-    def __or__(self, other: str | Regex) -> Regex:
-        if isinstance(other, (str, Regex)):
+    def __or__(self, other: Regex) -> Regex:
+        if isinstance(other, Regex):
             return Or(self, other)
         return NotImplemented
 
-    def __ror__(self, other: str | Regex):
-        if isinstance(other, (str, Regex)):
-            return Or(other, self)
+    def __add__(self, other: Regex):
+        if isinstance(other, Regex):
+            return Regex(self, other)
         return NotImplemented
-
-    def __add__(self, other: str | Regex):
-        return Regex(self, other)
-
-    def __radd__(self, other: str | Regex):
-        return Regex(other, self)
 
     def __ge__(self, other: Regex):
         if isinstance(other, Regex):
@@ -114,44 +111,44 @@ class Regex:
 
 
 class AnyOf(Regex):
-    _values: tuple[str | Regex]
+    _values: tuple[str | tuple[str, str], ...]
 
-    def __init__(self, *values: str | Regex | tuple[str | Regex, str | Regex]) -> None:
-        vals: list[str | Regex] = []
+    def __init__(self, *values: str | tuple[str, str]) -> None:
+        vals: list[str | tuple[str, str]] = []
         for v in values:
             match v:
-                case str() | Regex():
+                case str():  # a character
                     vals.append(v)
-                case [i, ii]:
-                    vals.append(rf"{i}-{ii}")
+                case [str(), str()]:  # a character range
+                    vals.append(v)
                 case _:
                     raise TypeError
         self._values = tuple(vals)
 
     def __str__(self) -> str:
-        return f"[{''.join(map(str, self._values))}]"
+        return f"[{''.join((str(i) if isinstance(i, str) else f'{i[0]}-{i[1]}') for i in self._values)}]"
 
     def __repr__(self) -> str:
         return f"AnyOf({', '.join(map(repr, self._values))})"
 
 
 class NoneOf(Regex):
-    _values: tuple[str | Regex]
+    _values: tuple[str | tuple[str, str], ...]
 
-    def __init__(self, *values: str | Regex | tuple[str | Regex, str | Regex]) -> None:
-        vals: list[str | Regex] = []
+    def __init__(self, *values: str | tuple[str, str]) -> None:
+        vals: list[str | tuple[str, str]] = []
         for v in values:
             match v:
-                case str() | Regex():
+                case str():  # a character
                     vals.append(v)
-                case [i, ii]:
-                    vals.append(rf"{i}-{ii}")
+                case [str(), str()]:  # a character range
+                    vals.append(v)
                 case _:
                     raise TypeError
         self._values = tuple(vals)
 
     def __str__(self) -> str:
-        return f"[^{''.join(map(str, self._values))}]"
+        return f"[^{''.join((str(i) if isinstance(i, str) else f'{i[0]}-{i[1]}') for i in self._values)}]"
 
     def __repr__(self) -> str:
         return f"NoneOf({', '.join(map(repr, self._values))})"
@@ -470,13 +467,20 @@ class Or(Regex):
     _expressions: tuple[str | Regex, ...] = tuple()
 
     def __init__(self, *expressions: str | Regex) -> None:
-        self._expressions = (*self._expressions, *expressions)
+        exps = []
+        for exp in expressions:
+            if isinstance(exp, Or):
+                exps.extend(exp._expressions)
+            else:
+                exps.append(exp)
+
+        self._expressions = tuple(exps)
 
     def __str__(self) -> str:
         return "|".join(map(str, self._expressions))
 
     def __repr__(self) -> str:
-        return " | ".join(map(repr, self._expressions))
+        return "(" + " | ".join(map(repr, self._expressions)) + ")"
 
 
 # ===============================================================================
