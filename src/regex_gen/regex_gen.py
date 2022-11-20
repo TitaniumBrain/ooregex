@@ -110,7 +110,7 @@ class Regex:
                 return Repeat(self, (start_, stop_))
 
             case _:
-                raise ValueError("Invalid key. Must be an int >= 0 or an int range")
+                raise ValueError("Invalid key. Must be an int >= 0 or an int range.")
 
 
 class AnyOf(Regex):
