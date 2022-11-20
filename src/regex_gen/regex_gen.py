@@ -24,24 +24,6 @@ def _sorted_by_string(iterable: Iterable[str], order_str: str) -> list[str]:
     return sorted(iterable, key=lambda c: order_str.find(c))
 
 
-# ===============================================================================
-# Constants
-# ===============================================================================
-DOT = r"\."
-START = r"^"
-TRUE_START = r"\A"
-END = r"$"
-TRUE_END = r"\Z"
-WORD_BOUNDARY = r"\b"
-NOT_WORD_BOUNDARY = r"\B"
-DIGIT = r"\d"
-NOT_DIGIT = r"\D"
-WHITESPACE = r"\s"
-NOT_WHITESPACE = r"\S"
-WORD = r"\w"
-NOT_WORD = r"\W"
-
-
 class Regex:
     """
     Base regex class.
@@ -554,6 +536,27 @@ class Flag:
         return NotImplemented
 
 
+# ===============================================================================
+# Constants
+# ===============================================================================
+
+# Escape sequences
+DOT = Regex(r"\.")
+START = Regex(r"^")
+TRUE_START = Regex(r"\A")
+END = Regex(r"$")
+TRUE_END = Regex(r"\Z")
+WORD_BOUNDARY = Regex(r"\b")
+NOT_WORD_BOUNDARY = Regex(r"\B")
+DIGIT = Regex(r"\d")
+NOT_DIGIT = Regex(r"\D")
+WHITESPACE = Regex(r"\s")
+NOT_WHITESPACE = Regex(r"\S")
+WORD = Regex(r"\w")
+NOT_WORD = Regex(r"\W")
+ANY = Regex(r".")
+
+# Flags
 A = ASCII = Flag("a")
 I = IGNORECASE = Flag("i")
 L = LOCALE = Flag("L")
