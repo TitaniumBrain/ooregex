@@ -50,15 +50,15 @@ from regex_gen import (
 
 
 def test_or():
-    assert Regex("spam") | "eggs" == r"spam|eggs"
+    assert Regex("spam") | Regex("eggs") == r"spam|eggs"
 
 
 def test_ror():
-    assert "spam" | Regex("eggs") == r"spam|eggs"
+    assert Regex("spam") | Regex("eggs") == r"spam|eggs"
 
 
 def test_radd():
-    assert "spam" + Regex("eggs") == r"spameggs"
+    assert Regex("spam") + Regex("eggs") == r"spameggs"
 
 
 def test_pos_look_ahead():
@@ -103,9 +103,9 @@ def test_range():
 
 def test_complex_1():
     assert (
-        Group(Regex("spam") | "bacon", name="first")
+        Group(Or("spam", "bacon"), name="first")
         + Group("spam")[0:1]
         + If(1, then="eggs", else_=Group(name="first"))
     ) | (
-        "bac" + AnyOf("o0") + "n"
+        Regex("bac", AnyOf("o0"), "n")
     ) == r"(?P<first>spam|bacon)(spam)?(?(1)eggs|(?P=first))|bac[o0]n"
