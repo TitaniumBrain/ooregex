@@ -1,3 +1,20 @@
+"""
+The core of the package.
+
+Attributes
+----------
+All exported symbols relevant to the user are available in the main
+`regex_gen` namespace, i.e. do
+>>> from regex_gen import ...
+
+instead of
+>>> from regex_gen.regex_gen import ...
+
+Examples
+--------
+Refer to the docs for a comprehensive explanation of the package's
+functionality with examples.
+"""
 from __future__ import annotations
 
 import re
@@ -9,9 +26,26 @@ from typing import Iterable
 
 
 def _needs_grouping(expr: str | Regex) -> bool:
-    # Go to https://regex101.com/r/lVZhG2/1
-    # to inspect/test the pattern
-    # Pattern matches some cases where wrapping in a group is redundant
+    """Returns True if an expression may need to be surrounded in a group.
+
+    Tests for a few cases where wrapping `expr` in a group is redundant.
+
+    Parameters
+    ----------
+    expr : str | Regex
+        The expression to be tested.
+
+    Returns
+    -------
+    bool
+        False in a few cases where grouping is redundant, True otherwise.
+
+    Notes
+    -----
+    Go to https://regex101.com/r/lVZhG2/1 to inspect/test the pattern.
+
+    Pattern matches some cases where wrapping in a group is redundant.
+    """
     pattern = r"(?P<char>^\\?.$)|(?P<square>^\[(?:[^\n\[]|\\\[)*[^\\]\]$)|(?P<braces>^\((?:[^\n\(]|\\\()*[^\\]\)$)"
 
     match = re.match(pattern, str(expr))
@@ -20,16 +54,117 @@ def _needs_grouping(expr: str | Regex) -> bool:
 
 
 def _sorted_by_string(iterable: Iterable[str], order_str: str) -> list[str]:
-    """Returns a list with the elements of `iterable` sorted by their index in `order_str`."""
+    """Returns a list sorted by the index of substrings in another string.
+
+    Returns a list with the elements of `iterable` sorted by the first
+    index at which they appear in `order_str`.
+
+    Parameters
+    ----------
+    iterable : Iterable[str]
+        An iterable of strings to be sorted.
+    order_str : str
+        A string that defines the desired order of strings.
+
+    Returns
+    -------
+    list[str]
+        A list of strings sorted as per `order_str`.
+    """
     return sorted(iterable, key=lambda c: order_str.find(c))
 
 
+# ===============================================================================
+# Classes
+# ===============================================================================
+
+
 class Regex:
-    """
-    Base regex class.
+    """Base Regex class, represents a regular expression.
+
+    Calling `str` on an instance of this class or its subclasses returns a
+    string representing a regular expression.
+
+    A Regex instance is compared to another object by comparing their
+    string representations, meaning that an instance can be directly
+    compared to a string, for example.
+
+    Instances are immutable and hashable.
+    Two instances have the same hash value if they have the same string
+    representation.
+
+    Instances of this class or a subclass are also returned by operations
+    on other instances.
+    The supported operators are `+`, `|`, `>=`, `>`, `<=`, `<` and `[]`.
+
+    Operations
+    ----------
+
+    Adding (`+`) two instances is equivalent to concatenating their regexes.
+    >>> str(Regex("spam") + Regex("eggs"))
+    'spameggs'
+
+    Or'ing (`|`) two instances is used to define matching alternatives.
+    >>> str(Regex("spam") | Regex("eggs"))
+    'spam|eggs'
+
+    The `>=` operator adds the second instance as a `Positive_LookAhead`.
+    >>> str(Regex("spam") >= Regex("eggs"))
+    'spam(?=eggs)'
+    >>> str(Regex("spam") + Positive_LookAhead("eggs"))
+    'spam(?=eggs)'
+
+    The `>` operator adds the second instance as a `Negative_LookAhead`.
+    >>> str(Regex("spam") > Regex("eggs"))
+    'spam(?!eggs)'
+    >>> str(Regex("spam") + Negative_LookAhead("eggs"))
+    'spam(?!eggs)'
+
+    The `<=` operator adds the first instance as a `Positive_LookBehind`.
+    >>> str(Regex("spam") <= Regex("eggs"))
+    '(?<=spam)eggs'
+    >>> str(Positive_LookBehind("spam") + Regex("eggs"))
+    '(?<=spam)eggs'
+
+    The `<` operator adds the first instance as a `Negative_LookBehind`.
+    >>> str(Regex("spam") < Regex("eggs"))
+    '(?<!spam)eggs'
+    >>> str(Negative_LookBehind("spam") + Regex("eggs"))
+    '(?<!spam)eggs'
+
+    Indexing an instance returns an appropriate quantifier subclass
+    depending on the indices.
+    >>> str(Regex("z")[:])
+    'z*'
+    >>> str(Regex("z")[1:])
+    'z+'
+    >>> str(Regex("z")[0:1])
+    'z?'
+    >>> str(Regex("z")[27:42])
+    'z{27,42}'
+    >>> str(Regex("z")[42:])
+    'z{42,}'
+
+    Examples
+    --------
+    Refer to the docs for a comprehensive explanation of the package's
+    functionality with examples.
     """
 
     def __init__(self, *expressions: str | Regex) -> None:
+        """
+        Parameters
+        ----------
+        *expressions : tuple[str | Regex, ...]
+            Regular expressions to be concatenated. At least one required.
+
+        Raises
+        ------
+        ValueError
+            No expression is passed, i.e. *expressions is empty.
+        """
+        if len(expressions) == 0:
+            raise ValueError("No expressions passed in. Pass at least one expression.")
         exps = []
         for exp in expressions:
             # if is instance of Regex itself and not of a subclass
@@ -111,9 +246,37 @@ class Regex:
 
 
 class AnyOf(Regex):
+    """Represents a character set.
+
+    Expression will match any character in the set.
+    Can be passed strings, which get included in the character set literally;
+    Can be passed 2-tuples, which get included as a character range.
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(AnyOf("a", "bc", ("w", "z")))
+    '[abcw-z]'
+    """
+
     _values: tuple[str | tuple[str, str], ...]
 
     def __init__(self, *values: str | tuple[str, str]) -> None:
+        """
+        Parameters
+        ----------
+        *values : tuple[str | tuple[str, str]]
+            Characters to include in a set.
+            A 2-tuple represents a character range.
+
+        Raises
+        ------
+        TypeError
+            One or more values of the wrong type.
+        """
         vals: list[str | tuple[str, str]] = []
         for v in values:
             match v:
@@ -133,9 +296,38 @@ class AnyOf(Regex):
 
 
 class NoneOf(Regex):
+    """Represents a complemented character set.
+
+    Expression will match any character not in the set.
+    Can be passed strings, which get included in the character set literally;
+    Can be passed 2-tuples, which get included as a character range.
+
+    See Also
+    --------
+    AnyOf : similar but not complemented.
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(NoneOf("a", "bc", ("w", "z")))
+    '[^abcw-z]'
+    """
+
     _values: tuple[str | tuple[str, str], ...]
 
     def __init__(self, *values: str | tuple[str, str]) -> None:
+        """
+        Parameters
+        ----------
+        *values : tuple[str | tuple[str, str]]
+            Characters to include in a set.
+            A 2-tuple represents a character range.
+
+        Raises
+        ------
+        TypeError
+            One or more values of the wrong type.
+        """
         vals: list[str | tuple[str, str]] = []
         for v in values:
             match v:
@@ -155,9 +347,34 @@ class NoneOf(Regex):
 
 
 class Comment(Regex):
+    """A comment in a regular expression.
+
+    Anything inside a comment is ignored when matching the expression.
+
+    Warnings
+    --------
+    Most operations don't make sense with comments and may have unexpected
+    results. Use common sense.
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(Comment("spam"))
+    '(?#spam)'
+    """
+
     _comment: str | Regex
 
     def __init__(self, comment: str | Regex) -> None:
+        """
+        Parameters
+        ----------
+        comment : str | Regex
+            The value to be commented.
+        """
         self._comment = comment
 
     def __str__(self) -> str:
@@ -168,10 +385,38 @@ class Comment(Regex):
 
 
 class Flags(Regex):
+    """Adds inline flags to an expression.
+
+    Include flags as part of an expression.
+
+    If not passed an expression, it applies to the whole final expression
+    and should only be used at the beginning of it.
+    If passed an expression, the flags only apply to that subexpression.
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+    Flag : regex flags.
+
+    Examples
+    --------
+    >>> str(Flags(I, "spam")
+    '(?i:spam)'
+    """
+
     _flags: Flag
     _expression: str | Regex | None
 
     def __init__(self, flags: Flag, expression: str | Regex | None = None) -> None:
+        """
+        Parameters
+        ----------
+        flags : Flag
+            A Flag instance representing the flags to be included.
+        expression : str | Regex | None, optional
+            Expression to have flags applied to, by default None.
+            If None, must be used at the beginning of the final expression.
+        """
         self._flags = flags
         self._expression = expression
 
@@ -186,6 +431,24 @@ class Flags(Regex):
 
 
 class Group(Regex):
+    """Represents a group within an expression.
+
+    Groups an expression in a (non)capturing group if one is passed in.
+    If no expression is passed in, it instead represents a reference to a
+    previous group, specified by name or number.
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(Group(Regex("spam"), name=eggs))
+    '(?P<eggs>spam)'
+    >>> str(Group(name=eggs))
+    '(?P=eggs)'
+    """
+
     _expression: str | Regex | int | None = None
     _name: str | None
     _capture: bool
@@ -197,6 +460,25 @@ class Group(Regex):
         name: str | None = None,
         capture: bool = True,
     ) -> None:
+        """
+        Parameters
+        ----------
+        expression : str | Regex | int | None, optional
+            Expression to wrap in a group, by default None.
+            If None, represents a group reference.
+            If an int, represents a group reference by number.
+        name : str | None, optional
+            If provided, the group's name, by default None.
+            Must be a valid python identifier.
+        capture : bool, optional
+            Whether this is a capturing group, by default True.
+            If True, cannot pass in a `name`.
+
+        Raises
+        ------
+        ValueError
+            Invalid combination of arguments.
+        """
 
         # Check for invalid values or combinations of parameters
         match (expression, name, capture):
@@ -249,13 +531,40 @@ class Group(Regex):
 
 
 class If(Regex):
+    """Match an expression if a group exists.
+
+    Matches an expression if a group with a specified name or number
+    exists, with an optional alternative expression if it doesn't.
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(If(1, then="spam", else_="eggs"))
+    '(?(1)spam|eggs)'
+    >>> str(If(1, then="spam"))
+    '(?(1)spam)'
+    """
+
     _group: int | str
     _then: str | Regex
     _else: str | Regex | None
 
     def __init__(
-        self, group: int | str, then: str | Regex, else_: str | Regex | None
+        self, group: int | str, then: str | Regex, else_: str | Regex | None = None
     ) -> None:
+        """
+        Parameters
+        ----------
+        group : int | str
+            Group to test for. Can be a name or a number.
+        then : str | Regex
+            Expression to match if group exists.
+        else_ : str | Regex | None, optional
+            Expression to match if group doesn't exist.
+        """
         self._group = group
         self._then = then
         self._else = else_
@@ -272,9 +581,31 @@ class If(Regex):
 
 
 class Negative_LookAhead(Regex):
+    """Match if the expression doesn't match next.
+
+    Match if the expression doesn't match after the current position,
+    without consuming any of the string.
+    Returned by the `>` operator.
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(Regex("spam") > Regex("eggs"))
+    'spam(?!eggs)'
+    """
+
     _expression: str | Regex
 
     def __init__(self, expression: str | Regex) -> None:
+        """
+        Parameters
+        ----------
+        expression : str | Regex
+            Expression that shouldn't match.
+        """
         self._expression = expression
 
     def __str__(self) -> str:
@@ -285,9 +616,31 @@ class Negative_LookAhead(Regex):
 
 
 class Negative_LookBehind(Regex):
+    """Match if the expression doesn't precede the current position.
+
+    Match if the expression doesn't precede the current position.
+    Returned by the `<` operator.
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(Regex("spam") < Regex("eggs"))
+    '(?<!spam)eggs'
+    """
+
     _expression: str | Regex
 
     def __init__(self, expression: str | Regex) -> None:
+        """
+        Parameters
+        ----------
+        expression : str | Regex
+            Expression that shouldn't precede.
+            Must be a fixed length expression.
+        """
         self._expression = expression
 
     def __str__(self) -> str:
@@ -298,9 +651,31 @@ class Negative_LookBehind(Regex):
 
 
 class Positive_LookAhead(Regex):
+    """Match if the expression matches next.
+
+    Match if the expression matches after the current position,
+    without consuming any of the string.
+    Returned by the `>=` operator.
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(Regex("spam") >= Regex("eggs"))
+    'spam(?=eggs)'
+    """
+
     _expression: str | Regex
 
     def __init__(self, expression: str | Regex) -> None:
+        """
+        Parameters
+        ----------
+        expression : str | Regex
+            Expression that shouldn match next.
+        """
         self._expression = expression
 
     def __str__(self) -> str:
@@ -311,9 +686,31 @@ class Positive_LookAhead(Regex):
 
 
 class Positive_LookBehind(Regex):
+    """Match if the expression precedes the current position.
+
+    Match if the expression precedes the current position.
+    Returned by the `<=` operator.
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(Regex("spam") <= Regex("eggs"))
+    '(?<=spam)eggs'
+    """
+
     _expression: str | Regex
 
     def __init__(self, expression: str | Regex) -> None:
+        """
+        Parameters
+        ----------
+        expression : str | Regex
+            Expression that shouldn precede.
+            Must be a fixed length expression.
+        """
         self._expression = expression
 
     def __str__(self) -> str:
@@ -324,10 +721,40 @@ class Positive_LookBehind(Regex):
 
 
 class ZeroOrMore(Regex):
+    """Match an expression zero or more times.
+
+    Matches an expression zero or more times.
+    Returned by indexing an instance of `Regex` with `[:]` or `[0:]`.
+
+    Attributes
+    ----------
+    min, non_greedy
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(Regex("spam")[:])
+    '(?:spam)*'
+    >>> str(Regex("spam")[:].min)
+    '(?:spam)*?'
+    """
+
     _expression: str | Regex
     _greedy: bool
 
     def __init__(self, expression: str | Regex, greedy: bool = True) -> None:
+        """
+        Parameters
+        ----------
+        expression : str | Regex
+            Expression to match.
+        greedy : bool, optional
+            Whether to match as many times possible, by default True.
+            If False, matches as little times as possible.
+        """
         self._expression = expression
         self._greedy = greedy
 
@@ -349,16 +776,60 @@ class ZeroOrMore(Regex):
 
     @property
     def non_greedy(self):
+        """Return a non greedy instance.
+
+        Returns a non greedy instance with the same expression, which
+        matches as little times as possible.
+
+        Returns
+        -------
+        ZeroOrMore
+            A non greedy instance.
+
+        See Also
+        --------
+        min : Alias.
+        """
         return ZeroOrMore(self._expression, False)
 
     min = non_greedy  # Alias
 
 
 class OneOrMore(Regex):
+    """Match an expression one or more times.
+
+    Matches an expression one or more times.
+    Returned by indexing an instance of `Regex` with `[1:]`.
+
+    Attributes
+    ----------
+    min, non_greedy
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(Regex("spam")[1:])
+    '(?:spam)+'
+    >>> str(Regex("spam")[1:].min)
+    '(?:spam)+?'
+    """
+
     _expression: str | Regex
     _greedy: bool
 
     def __init__(self, expression: str | Regex, greedy: bool = True) -> None:
+        """
+        Parameters
+        ----------
+        expression : str | Regex
+            Expression to match.
+        greedy : bool, optional
+            Whether to match as many times possible, by default True.
+            If False, matches as little times as possible.
+        """
         self._expression = expression
         self._greedy = greedy
 
@@ -380,16 +851,60 @@ class OneOrMore(Regex):
 
     @property
     def non_greedy(self):
+        """Return a non greedy instance.
+
+        Returns a non greedy instance with the same expression, which
+        matches as little times as possible.
+
+        Returns
+        -------
+        OneOrMore
+            A non greedy instance.
+
+        See Also
+        --------
+        min : Alias.
+        """
         return OneOrMore(self._expression, False)
 
     min = non_greedy  # Alias
 
 
 class Optional(Regex):
+    """Match an expression zero or one times.
+
+    Matches an expression zero or one times.
+    Returned by indexing an instance of `Regex` with `[0:1]`.
+
+    Attributes
+    ----------
+    min, non_greedy
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(Regex("spam")[0:1])
+    '(?:spam)?'
+    >>> str(Regex("spam")[0:1].min)
+    '(?:spam)??'
+    """
+
     _expression: str | Regex
     _greedy: bool
 
     def __init__(self, expression: str | Regex, greedy: bool = True) -> None:
+        """
+        Parameters
+        ----------
+        expression : str | Regex
+            Expression to match.
+        greedy : bool, optional
+            Whether to match as many times possible, by default True.
+            If False, matches as little times as possible.
+        """
         self._expression = expression
         self._greedy = greedy
 
@@ -411,12 +926,48 @@ class Optional(Regex):
 
     @property
     def non_greedy(self):
+        """Return a non greedy instance.
+
+        Returns a non greedy instance with the same expression, which
+        matches as little times as possible.
+
+        Returns
+        -------
+        Optional
+            A non greedy instance.
+
+        See Also
+        --------
+        min : Alias.
+        """
         return Optional(self._expression, False)
 
     min = non_greedy  # Alias
 
 
 class Repeat(Regex):
+    """Match an expression a specified amount of times.
+
+    Matches an expression either n times or
+    between a and b times.
+    Returned by indexing an instance of `Regex` with `[n]` or `[a:b]`.
+
+    Attributes
+    ----------
+    min, non_greedy
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(Regex("spam")[27:42])
+    '(?:spam){27,42}'
+    >>> str(Regex("spam")[42])
+    '(?:spam){42}'
+    """
+
     _expression: str | Regex
     _count: int | tuple[int, int]
     _greedy: bool
@@ -427,6 +978,18 @@ class Repeat(Regex):
         count: int | tuple[int, int],
         greedy: bool = True,
     ) -> None:
+        """
+        Parameters
+        ----------
+        expression : str | Regex
+            Expression to match.
+        count : int | tuple[int, int]
+            Amount of times to match.
+            Can be an exact amount or a tuple of the lower and upper bounds.
+        greedy : bool, optional
+            Whether to match as many times possible, by default True.
+            If False, matches as little times as possible.
+        """
         self._expression = expression
         self._count = count
         self._greedy = greedy
@@ -462,15 +1025,68 @@ class Repeat(Regex):
 
     @property
     def non_greedy(self):
+        """Return a non greedy instance.
+
+        Returns a non greedy instance with the same expression, which
+        matches as little times as possible.
+
+        Returns
+        -------
+        Repeat
+            A non greedy instance.
+
+        See Also
+        --------
+        min : Alias.
+        """
         return Repeat(self._expression, self._count, False)
 
     min = non_greedy  # Alias
 
 
 class Or(Regex):
+    """Match either expression.
+
+    Matches any of the expressions passed in.
+    Returned by the `|` operator.
+
+    Warnings
+    --------
+    Unless you want an alternative for the whole expression, you may need
+    to wrap the `Or` in a group.
+
+    For example,
+    >>> str(Regex("spam") + Or("spam", "eggs"))
+    'spamspam|eggs'
+    >>> str(Regex("spam") + (Regex("spam") | Regex("eggs")))
+    'spamspam|eggs'
+
+    will match either 'spamspam' or 'eggs', not 'spamspam' or 'spameggs'
+    as one might expect.
+
+    To get the desired result, you could do
+    >>> str(Regex("spam") + Group(Or("spam", "eggs"), capture=False))
+    'spam(?:spam|eggs)'
+
+    See Also
+    --------
+    Regex : Base class, see other methods.
+
+    Examples
+    --------
+    >>> str(Regex("spam") | Regex("eggs")))
+    'spam|eggs'
+    """
+
     _expressions: tuple[str | Regex, ...] = tuple()
 
     def __init__(self, *expressions: str | Regex) -> None:
+        """
+        Parameters
+        ----------
+        *expressions : tuple[str | Regex, ...]
+            Regular expression alternatives.
+        """
         exps = []
         for exp in expressions:
             if isinstance(exp, Or):
@@ -491,7 +1107,55 @@ class Or(Regex):
 # Flags
 # ===============================================================================
 class Flag:
+    """A class to handle regex flag operations.
+
+    An instance of this class represents one of or a combination of the
+    flags that can be used in a regular expression.
+    Instances of this class should not be created directly, but instead
+    you should use the provided instances.
+
+    Operations
+    ----------
+    Flags can be combined with `+` or `|` (equivalent).
+    >>> str(A + I)
+    'ai'
+
+    Flags can be disabled with the `-` operator.
+    >>> str(A - X)
+    'a-x'
+
+    Combine these as needed:
+    >>> str((A + I) - (S + X) - M)
+    'ai-msx'
+
+    See Also
+    --------
+    Flags : Add inline flags to a regex.
+
+    Examples
+    --------
+    Refer to the docs for a comprehensive explanation of the package's
+    functionality with examples.
+    """
+
     def __init__(self, flag: str = "", disable: str = "") -> None:
+        """
+        Parameters
+        ----------
+        flag : str, optional
+            A string of all the flags to enable, by default "".
+            Possible values are any combination of substrings of "aiLmsux".
+        disable : str, optional
+            A string of all the flasg to disable, by default "".
+            Possible values are any combination of substrings of "imsx".
+
+        Raises
+        ------
+        ValueError
+            Invalid value in `flag`.
+        ValueError
+            Invalid value in `disable`.
+        """
         enable_flags = set(flag)
         if any(f not in "aiLmsux" for f in enable_flags):
             raise ValueError("Can only enable flags in 'aiLmsux'.")
@@ -542,6 +1206,12 @@ class Flag:
                 "".join(self._disable_flags | other._enable_flags),
             )
         return NotImplemented
+
+    def __neg__(self):
+        return Flag(
+            "".join(set()),
+            "".join(self._enable_flags),
+        )
 
 
 # ===============================================================================
