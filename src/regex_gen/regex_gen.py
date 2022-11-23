@@ -261,7 +261,11 @@ class If(Regex):
         self._else = else_
 
     def __str__(self) -> str:
-        return rf"(?({self._group}){self._then}|{self._else if self._else is not None else ''})"
+        return (
+            rf"(?({self._group}){self._then}"
+            + (f"|{self._else}" if self._else is not None else "")
+            + ")"
+        )
 
     def __repr__(self) -> str:
         return rf"If({self._group!r}, {self._then!r}, {self._else!r})"
