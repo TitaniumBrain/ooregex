@@ -238,7 +238,9 @@ class Regex:
             case slice(start=0, stop=1, step=None):
                 return Optional(self)
 
-            case slice(start=int(start_), stop=int(stop_), step=None):
+            case slice(
+                start=int() | None as start_, stop=int() | None as stop_, step=None
+            ):
                 return Repeat(self, (start_, stop_))
 
             case _:
@@ -969,13 +971,13 @@ class Repeat(Regex):
     """
 
     _expression: str | Regex
-    _count: int | tuple[int, int]
+    _count: int | tuple[int | None, int | None]
     _greedy: bool
 
     def __init__(
         self,
         expression: str | Regex,
-        count: int | tuple[int, int],
+        count: int | tuple[int | None, int | None],
         greedy: bool = True,
     ) -> None:
         """
@@ -999,7 +1001,13 @@ class Repeat(Regex):
 
             count = f"{{{self._count}}}"
         else:
-            count = f"{{{self._count[0]},{self._count[1]}}}"
+            count = (
+                "{"
+                + (f"{self._count[0]}" if self._count[0] else "")
+                + ","
+                + (f"{self._count[1]}" if self._count[1] else "")
+                + "}"
+            )
 
         if _needs_grouping(self._expression):
             ret_val = rf"(?:{self._expression}){count}"
