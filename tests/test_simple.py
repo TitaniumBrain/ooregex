@@ -31,14 +31,14 @@ from regex_gen import (
     If,
     L,
     M,
-    Negative_LookAhead,
-    Negative_LookBehind,
+    NegativeLookAhead,
+    NegativeLookBehind,
     NoneOf,
     OneOrMore,
     Optional,
     Or,
-    Positive_LookAhead,
-    Positive_LookBehind,
+    PositiveLookAhead,
+    PositiveLookBehind,
     Regex,
     Repeat,
     S,
@@ -150,19 +150,19 @@ def test_comment():
 
 
 def test_positive_lookahead():
-    assert Positive_LookAhead(r"spam") == r"(?=spam)"
+    assert PositiveLookAhead(r"spam") == r"(?=spam)"
 
 
 def test_negative_lookahead():
-    assert Negative_LookAhead(r"spam") == r"(?!spam)"
+    assert NegativeLookAhead(r"spam") == r"(?!spam)"
 
 
 def test_positive_lookbehind():
-    assert Positive_LookBehind(r"spam") == r"(?<=spam)"
+    assert PositiveLookBehind(r"spam") == r"(?<=spam)"
 
 
 def test_negative_lookbehind():
-    assert Negative_LookBehind(r"spam") == r"(?<!spam)"
+    assert NegativeLookBehind(r"spam") == r"(?<!spam)"
 
 
 def test_conditional():

@@ -199,22 +199,22 @@ class Regex:
 
     def __ge__(self, other: Regex):
         if isinstance(other, Regex):
-            return self + Positive_LookAhead(other)
+            return self + PositiveLookAhead(other)
         return NotImplemented
 
     def __gt__(self, other: Regex):
         if isinstance(other, Regex):
-            return self + Negative_LookAhead(other)
+            return self + NegativeLookAhead(other)
         return NotImplemented
 
     def __le__(self, other: Regex):
         if isinstance(other, Regex):
-            return Positive_LookBehind(self) + other
+            return PositiveLookBehind(self) + other
         return NotImplemented
 
     def __lt__(self, other: Regex):
         if isinstance(other, Regex):
-            return Negative_LookBehind(self) + other
+            return NegativeLookBehind(self) + other
         return NotImplemented
 
     def __hash__(self) -> int:
@@ -580,7 +580,7 @@ class If(Regex):
         return rf"If({self._group!r}, {self._then!r}, {self._else!r})"
 
 
-class Negative_LookAhead(Regex):
+class NegativeLookAhead(Regex):
     """Match if the expression doesn't match next.
 
     Match if the expression doesn't match after the current position,
@@ -615,7 +615,7 @@ class Negative_LookAhead(Regex):
         return rf"Negative_LookAhead({self._expression!r})"
 
 
-class Negative_LookBehind(Regex):
+class NegativeLookBehind(Regex):
     """Match if the expression doesn't precede the current position.
 
     Match if the expression doesn't precede the current position.
@@ -650,7 +650,7 @@ class Negative_LookBehind(Regex):
         return rf"Negative_LookBehind({self._expression!r})"
 
 
-class Positive_LookAhead(Regex):
+class PositiveLookAhead(Regex):
     """Match if the expression matches next.
 
     Match if the expression matches after the current position,
@@ -685,7 +685,7 @@ class Positive_LookAhead(Regex):
         return rf"Positive_LookAhead({self._expression!r})"
 
 
-class Positive_LookBehind(Regex):
+class PositiveLookBehind(Regex):
     """Match if the expression precedes the current position.
 
     Match if the expression precedes the current position.
