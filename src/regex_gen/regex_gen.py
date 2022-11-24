@@ -402,7 +402,7 @@ class Flags(Regex):
 
     Examples
     --------
-    >>> str(Flags(I, "spam")
+    >>> str(Flags(I, "spam"))
     '(?i:spam)'
     """
 
