@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "regex-gen"
+name = "regex_gen"
 version = "0.1.0"
 description = "A simple, object-oriented, regular expression generator."
 authors = ["Titanium Brain <titaniumbrain@vivaldi.net>"]
