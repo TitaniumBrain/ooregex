@@ -1,7 +1,7 @@
 """
 A simple, object oriented, regular expression generator.
 
-regex_gen is a package aimed at providing a simple syntax for composing
+ooregex is a package aimed at providing a simple syntax for composing
 regular expressions, without having to memorise their syntax.
 
 Classes
@@ -95,10 +95,10 @@ functionality with examples.
 # read version from installed package
 from importlib.metadata import version
 
-__version__ = version("regex_gen")
+__version__ = version("ooregex")
 
 # export names from inner module
-from .regex_gen import (
+from .ooregex import (
     ANY,
     ASCII,
     DIGIT,

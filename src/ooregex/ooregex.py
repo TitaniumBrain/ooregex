@@ -4,11 +4,11 @@ The core of the package.
 Attributes
 ----------
 All exported symbols relevant to the user are available in the main
-`regex_gen` namespace, i.e. do
->>> from regex_gen import ...
+`ooregex` namespace, i.e. do
+>>> from ooregex import ...
 
 instead of
->>> from regex_gen.regex_gen import ...
+>>> from ooregex.ooregex import ...
 
 Examples
 --------

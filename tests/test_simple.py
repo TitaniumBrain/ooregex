@@ -1,6 +1,5 @@
 import pytest
-
-from regex_gen import (
+from ooregex import (
     ANY,
     ASCII,
     DIGIT,

@@ -1,15 +1,15 @@
 <h1 align="center">
-regex_gen
+ooregex
 </h1>
 
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/TitaniumBrain/regex_gen?sort=semver)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/regex_gen?color=orange&label=%E2%AC%87%20downloads)
-![GitHub](https://img.shields.io/github/license/TitaniumBrain/regex_gen?color=blue)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/TitaniumBrain/ooregex?sort=semver)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/ooregex?color=orange&label=%E2%AC%87%20downloads)
+![GitHub](https://img.shields.io/github/license/TitaniumBrain/ooregex?color=blue)
 ![Code Style - Black](https://img.shields.io/badge/code%20style-black-000000.svg)
 
 A simple, object oriented, regular expression generator.
 
-`regex_gen` is a package aimed at providing a simple syntax for composing
+`ooregex` is a package aimed at providing a simple syntax for composing
 regular expressions, without having to memorise their syntax.
 
 It **does not** guarantee that the expressions generated are the most efficient.
@@ -23,7 +23,7 @@ It is assumed that users have some understanding of [regular expressions](https:
 You can install this package using pip with the command
 
 ```bash
-pip install regex_gen
+pip install ooregex
 ```
 
 ## Usage
@@ -35,13 +35,13 @@ See the full documentation [here](docs/tutorial.md).
 Import the module with:
 
 ```python
-import regex_gen
+import ooregex
 ```
 
 Alternatively, import only the symbols that you need:
 
 ```python
-from regex_gen import (...)
+from ooregex import (...)
 ```
 
 Now let's build an expression for matching a price tag:
@@ -49,7 +49,7 @@ Now let's build an expression for matching a price tag:
 ```python
 import re
 
-from regex_gen import *
+from ooregex import *
 
 pattern = Regex(
     Group(name="price", expression=Regex(
@@ -90,7 +90,7 @@ Look how much clearer it is compared to the generated string:
 
 ## Report a bug
 
-If you find a bug, you can [open an issue](https://github.com/TitaniumBrain/regex_gen/issues) or [email me](mailto:titaniumbrain@vivaldi.net?subject=(regex_gen)%20Bug%20Report).
+If you find a bug, you can [open an issue](https://github.com/TitaniumBrain/ooregex/issues) or [email me](mailto:titaniumbrain@vivaldi.net?subject=(ooregex)%20Bug%20Report).
 
 
 ## License
